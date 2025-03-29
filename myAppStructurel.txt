@@ -1,0 +1,36 @@
+MyApp (StatelessWidget)
+└── MyHomePage (StatefulWidget)
+    ├── _MyHomePageState (State)
+    │   ├── 変数:
+    │   │   ├── List<Todo> _todoList
+    │   │   ├── TextEditingController _textController (オプション)
+    │   │
+    │   ├── 関数:
+    │   │   ├── void _addTodo(String text)
+    │   │   ├── void _removeTodo(int index)
+    │   │   ├── void _toggleDone(int index) (オプション)
+    │   │
+    │   ├── UI:
+    │   │   ├── Scaffold
+    │   │   │   ├── AppBar
+    │   │   │   ├── Column
+    │   │   │   │   ├── TextField (オプション)
+    │   │   │   │   ├── Expanded
+    │   │   │   │   │   ├── TodoList (StatefulWidget)
+    │   │   │   ├── FloatingActionButton (onPressed: _addTodo)
+    │   │
+    │   ├── 子ウィジェット:
+    │   │   ├── TodoList (StatefulWidget)
+    │   │   │   ├── _TodoListState (State)
+    │   │   │   │   ├── ListView.builder
+    │   │   │   │   │   ├── TodoCard (StatelessWidget)
+    │   │   │   │   │   │   ├── Card
+    │   │   │   │   │   │   │   ├── ListTile
+    │   │   │   │   │   │   │   │   ├── Text (TODOのタイトル)
+    │   │   │   │   │   │   │   │   ├── Checkbox (完了状態の切り替え)
+    │   │   │   │   │   │   │   │   ├── IconButton (削除ボタン)
+    │
+    ├── Todo (モデルクラス)
+    │   ├── 変数:
+    │   │   ├── String title
+    │   │   ├── bool isDone
