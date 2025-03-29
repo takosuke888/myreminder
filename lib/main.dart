@@ -13,8 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TODO App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'TODO App'),
     );
@@ -51,16 +50,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _showAddTodoModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return AddTodoModal(onAdd: _addTodo);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +64,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTodoModal(context),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          isScrollControlled: true, // 画面半分よりも大きなモーダルの表示設定
+          builder: (BuildContext context) {
+            return AddTodoModal(onAdd: _addTodo);
+        }),
         child: const Icon(Icons.add),
       ),
     );
@@ -160,13 +154,17 @@ class AddTodoModal extends StatefulWidget {
   const AddTodoModal({super.key, required this.onAdd});
 
   @override
-  _AddTodoModalState createState() => _AddTodoModalState();
+  State<AddTodoModal> createState() => _AddTodoModalState();
 }
 
 class _AddTodoModalState extends State<AddTodoModal> {
+  
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _linkController = TextEditingController();
   DateTime? _selectedDate;
+
+  bool isDispayKeybord = false;
+  final FocusNode _focusTitle = FocusNode();
 
   void _submit() {
     if (_titleController.text.isNotEmpty) {
@@ -194,28 +192,67 @@ class _AddTodoModalState extends State<AddTodoModal> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _focusTitle.addListener(() => _onFocusChange(_focusTitle));
+  }
+
+  void _onFocusChange(FocusNode focus) {
+    setState(() {
+      if (focus.hasFocus) {
+        isDispayKeybord = true;
+      } else {
+        isDispayKeybord = false;
+      }
+    });
+  }  
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+    return SizedBox(
+      height: isDispayKeybord // キーボードの有無により、モーダルのサイズを設定
+          ? MediaQuery.of(context).size.height * 0.8
+          : MediaQuery.of(context).size.height * 0.5,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-            controller: _titleController,
-            decoration: const InputDecoration(labelText: 'TODOタイトル'),
+
+          Padding(padding: const EdgeInsets.all(20.0),
+            child: TextField(
+              focusNode: _focusTitle,
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'TODOタイトル',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                ),
+              ),
+            ),
           ),
-          TextField(
-            controller: _linkController,
-            decoration: const InputDecoration(labelText: 'リンク (任意)'),
+
+          Padding(padding: const EdgeInsets.all(20.0),
+            child: TextField(
+              controller: _linkController,
+              decoration: const InputDecoration(
+                labelText: 'TODOリンク (任意)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                ),
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: _pickDate,
-            child: Text(_selectedDate == null ? '期限を選択' : DateFormat('yyyy-MM-dd').format(_selectedDate!)),
+
+          Padding(padding: const EdgeInsets.all(20.0),
+            child: TextButton(
+              onPressed: _pickDate,
+              child: Text(_selectedDate == null ? '期限を選択' : DateFormat('yyyy-MM-dd').format(_selectedDate!)),
+            ),
           ),
+
           ElevatedButton(
             onPressed: _submit,
             child: const Text('追加'),
           ),
+
         ],
       ),
     );
