@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+import 'package:myreminder/modules/todo.dart'; // Todoクラスのインポート
+
+void main() async{
+
+  // hiveの初期化
+  await Hive.initFlutter();
+  Hive.registerAdapter(TodoAdapter()); // Todoクラスのアダプタを登録
+  await Hive.openBox<Todo>('todoBox'); // Boxのオープン
+
+  // TODOアプリの初期化
   runApp(const MyApp());
 }
 
@@ -20,6 +30,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// TODOアプリのメイン画面
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -29,25 +40,25 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+// TODOアプリの状態管理
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Todo> _todoList = [];
+  final Box<Todo> _todoBox = Hive.box<Todo>('todoBox');
 
   void _addTodo(Todo todo) {
-    setState(() {
-      _todoList.add(todo);
-    });
+    _todoBox.add(todo);
+    setState(() {});
   }
 
   void _removeTodo(int index) {
-    setState(() {
-      _todoList.removeAt(index);
-    });
+    _todoBox.deleteAt(index);
+    setState(() {});
   }
 
   void _toggleDone(int index) {
-    setState(() {
-      _todoList[index].isDone = !_todoList[index].isDone;
-    });
+    Todo todo = _todoBox.getAt(index)!;
+    todo.isDone = !todo.isDone;
+    todo.save();
+    setState(() {});
   }
 
   @override
@@ -56,12 +67,20 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Expanded(
-        child: TodoList(
-          todos: _todoList,
-          onToggle: _toggleDone,
-          onRemove: _removeTodo,
-        ),
+      body: ValueListenableBuilder(
+        valueListenable: _todoBox.listenable(),
+        builder: (context, Box<Todo> box, _) {
+          return ListView.builder(
+            itemCount: box.length,
+            itemBuilder: (context, index) {
+              return TodoCard(
+                todo: box.getAt(index)!,
+                onToggle: () => _toggleDone(index),
+                onRemove: () => _removeTodo(index),
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showModalBottomSheet(
@@ -257,13 +276,4 @@ class _AddTodoModalState extends State<AddTodoModal> {
       ),
     );
   }
-}
-
-class Todo {
-  String title;
-  String link;
-  DateTime? deadline;
-  bool isDone;
-
-  Todo({required this.title, this.link = '', this.deadline, this.isDone = false});
 }
