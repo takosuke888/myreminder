@@ -31,6 +31,7 @@ $ flutter pub add build_runner --dev
 ```
 
 ### TODOモデルをmodule化
+https://zenn.dev/adjaper/articles/7bc1934c938518
 - lib/modules フォルダを作成
 - lib/modules/todo.dart を作成
 - todo.dart に、```part 'todo.g.dart';``` を追記
